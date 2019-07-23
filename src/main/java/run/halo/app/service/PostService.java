@@ -17,10 +17,11 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Post service.
+ * Post service interface.
  *
  * @author johnniang
  * @author ryanwang
+ * @date 2019-03-14
  */
 public interface PostService extends BasePostService<Post> {
 
@@ -96,6 +97,34 @@ public interface PostService extends BasePostService<Post> {
      */
     @NonNull
     List<ArchiveMonthVO> listMonthArchives();
+
+    /**
+     * Import post from markdown document.
+     *
+     * @param markdown markdown document.
+     * @param filename filename
+     * @return imported post
+     */
+    @NonNull
+    PostDetailVO importMarkdown(@NonNull String markdown, String filename);
+
+    /**
+     * Export post to markdown file by post id.
+     *
+     * @param id post id
+     * @return markdown file content
+     */
+    @NonNull
+    String exportMarkdown(@NonNull Integer id);
+
+    /**
+     * Export post to markdown file by post.
+     *
+     * @param post current post
+     * @return markdown file content
+     */
+    @NonNull
+    String exportMarkdown(@NonNull Post post);
 
     /**
      * Converts to detail vo.

@@ -11,10 +11,11 @@ import run.halo.app.service.base.CrudService;
 import java.util.List;
 
 /**
- * Menu service.
+ * Menu service interface.
  *
  * @author johnniang
  * @author ryanwang
+ * @date 2019-03-14
  */
 public interface MenuService extends CrudService<Menu, Integer> {
 
@@ -43,4 +44,12 @@ public interface MenuService extends CrudService<Menu, Integer> {
      * @return a menu tree
      */
     List<MenuVO> listAsTree(Sort sort);
+
+    /**
+     * Lists menu by parent id.
+     *
+     * @param id id
+     * @return a list of menu
+     */
+    List<Menu> listByParentId(@NonNull Integer id);
 }

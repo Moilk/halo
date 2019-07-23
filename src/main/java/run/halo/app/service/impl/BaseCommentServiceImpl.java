@@ -1,5 +1,6 @@
 package run.halo.app.service.impl;
 
+import cn.hutool.core.util.URLUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -50,18 +51,15 @@ import java.util.stream.Collectors;
  * Base comment service implementation.
  *
  * @author johnniang
- * @date 19-4-24
+ * @date 2019-04-24
  */
 @Slf4j
 public abstract class BaseCommentServiceImpl<COMMENT extends BaseComment> extends AbstractCrudService<COMMENT, Long> implements BaseCommentService<COMMENT> {
 
-    private final BaseCommentRepository<COMMENT> baseCommentRepository;
-
     protected final OptionService optionService;
-
     protected final UserService userService;
-
     protected final ApplicationEventPublisher eventPublisher;
+    private final BaseCommentRepository<COMMENT> baseCommentRepository;
 
     public BaseCommentServiceImpl(BaseCommentRepository<COMMENT> baseCommentRepository,
                                   OptionService optionService,
@@ -223,7 +221,7 @@ public abstract class BaseCommentServiceImpl<COMMENT extends BaseComment> extend
 
         // Check post id
         if (!ServiceUtils.isEmptyId(comment.getPostId())) {
-            targetMustExist(comment.getPostId());
+            validateTarget(comment.getPostId());
         }
 
         // Check parent id
@@ -243,8 +241,12 @@ public abstract class BaseCommentServiceImpl<COMMENT extends BaseComment> extend
             comment.setUserAgent(ServletUtils.getHeaderIgnoreCase(HttpHeaders.USER_AGENT));
         }
 
-        if (comment.getGavatarMd5() == null) {
-            comment.setGavatarMd5(DigestUtils.md5Hex(comment.getEmail()));
+        if (comment.getGravatarMd5() == null) {
+            comment.setGravatarMd5(DigestUtils.md5Hex(comment.getEmail()));
+        }
+
+        if (StringUtils.isNotEmpty(comment.getAuthorUrl())) {
+            comment.setAuthorUrl(URLUtil.normalize(comment.getAuthorUrl()));
         }
 
         if (authentication != null) {
@@ -388,7 +390,7 @@ public abstract class BaseCommentServiceImpl<COMMENT extends BaseComment> extend
             Assert.notNull(toCompareComment, "Comment to compare must not be null");
 
             // Get sort order
-            Sort.Order order = sort.filter(anOrder -> anOrder.getProperty().equals("id"))
+            Sort.Order order = sort.filter(anOrder -> "id".equals(anOrder.getProperty()))
                     .get()
                     .findFirst()
                     .orElseGet(() -> Sort.Order.desc("id"));
@@ -402,6 +404,7 @@ public abstract class BaseCommentServiceImpl<COMMENT extends BaseComment> extend
     }
 
     @NonNull
+    @Override
     public List<BaseCommentVO> convertToVo(@Nullable List<COMMENT> comments, @Nullable Comparator<BaseCommentVO> comparator) {
         if (CollectionUtils.isEmpty(comments)) {
             return Collections.emptyList();
@@ -426,6 +429,11 @@ public abstract class BaseCommentServiceImpl<COMMENT extends BaseComment> extend
 
         // Get all comments
         Page<COMMENT> topCommentPage = baseCommentRepository.findAllByPostIdAndStatusAndParentId(targetId, status, 0L, pageable);
+
+        if (topCommentPage.isEmpty()) {
+            // If the comments is empty
+            return ServiceUtils.buildEmptyPageImpl(topCommentPage);
+        }
 
         // Get top comment ids
         Set<Long> topCommentIds = ServiceUtils.fetchProperty(topCommentPage.getContent(), BaseComment::getId);
@@ -466,6 +474,53 @@ public abstract class BaseCommentServiceImpl<COMMENT extends BaseComment> extend
         childrenList.sort(Comparator.comparing(BaseComment::getId));
 
         return childrenList;
+    }
+
+    @Override
+    public <T extends BaseCommentDTO> T filterIpAddress(@NonNull T comment) {
+        Assert.notNull(comment, "Base comment dto must not be null");
+
+        // Clear ip address
+        comment.setIpAddress("");
+
+        // Handle base comment vo
+        if (comment instanceof BaseCommentVO) {
+            BaseCommentVO baseCommentVO = (BaseCommentVO) comment;
+            Queue<BaseCommentVO> commentQueue = new LinkedList<>();
+            commentQueue.offer(baseCommentVO);
+            while (!commentQueue.isEmpty()) {
+                BaseCommentVO current = commentQueue.poll();
+
+                // Clear ip address
+                current.setIpAddress("");
+
+                if (!CollectionUtils.isEmpty(current.getChildren())) {
+                    // Add children
+                    commentQueue.addAll(current.getChildren());
+                }
+            }
+        }
+
+        return comment;
+    }
+
+    @Override
+    public <T extends BaseCommentDTO> List<T> filterIpAddress(List<T> comments) {
+        if (CollectionUtils.isEmpty(comments)) {
+            return Collections.emptyList();
+        }
+
+        comments.forEach(this::filterIpAddress);
+
+        return comments;
+    }
+
+    @Override
+    public <T extends BaseCommentDTO> Page<T> filterIpAddress(Page<T> commentPage) {
+        Assert.notNull(commentPage, "Comment page must not be null");
+        commentPage.forEach(this::filterIpAddress);
+
+        return commentPage;
     }
 
     /**

@@ -1,5 +1,6 @@
 package run.halo.app.service.impl;
 
+import cn.hutool.core.text.StrBuilder;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -7,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import run.halo.app.event.logger.LogEvent;
 import run.halo.app.event.post.SheetVisitEvent;
+import run.halo.app.model.dto.InternalSheetDTO;
 import run.halo.app.model.entity.Sheet;
 import run.halo.app.model.enums.LogType;
 import run.halo.app.model.enums.PostStatus;
@@ -15,8 +17,11 @@ import run.halo.app.repository.SheetRepository;
 import run.halo.app.service.OptionService;
 import run.halo.app.service.SheetCommentService;
 import run.halo.app.service.SheetService;
+import run.halo.app.service.ThemeService;
+import run.halo.app.utils.MarkdownUtils;
 import run.halo.app.utils.ServiceUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -25,7 +30,8 @@ import java.util.Set;
  * Sheet service implementation.
  *
  * @author johnniang
- * @date 19-4-24
+ * @author ryanwang
+ * @date 2019-04-24
  */
 @Service
 public class SheetServiceImpl extends BasePostServiceImpl<Sheet> implements SheetService {
@@ -36,14 +42,18 @@ public class SheetServiceImpl extends BasePostServiceImpl<Sheet> implements Shee
 
     private final SheetCommentService sheetCommentService;
 
+    private final ThemeService themeService;
+
     public SheetServiceImpl(SheetRepository sheetRepository,
                             ApplicationEventPublisher eventPublisher,
                             SheetCommentService sheetCommentService,
-                            OptionService optionService) {
+                            OptionService optionService,
+                            ThemeService themeService) {
         super(sheetRepository, optionService);
         this.sheetRepository = sheetRepository;
         this.eventPublisher = eventPublisher;
         this.sheetCommentService = sheetCommentService;
+        this.themeService = themeService;
     }
 
     @Override
@@ -75,13 +85,6 @@ public class SheetServiceImpl extends BasePostServiceImpl<Sheet> implements Shee
         return listAll(pageable);
     }
 
-    /**
-     * Gets sheet by post status and url.
-     *
-     * @param status post status must not be null
-     * @param url    sheet url must not be blank
-     * @return sheet info
-     */
     @Override
     public Sheet getBy(PostStatus status, String url) {
         Sheet sheet = super.getBy(status, url);
@@ -92,6 +95,80 @@ public class SheetServiceImpl extends BasePostServiceImpl<Sheet> implements Shee
         }
 
         return sheet;
+    }
+
+    @Override
+    public Sheet importMarkdown(String markdown) {
+        Assert.notNull(markdown, "Markdown document must not be null");
+
+        // Render markdown to html document.
+        String content = MarkdownUtils.renderHtml(markdown);
+
+        // Gets frontMatter
+        Map<String, List<String>> frontMatter = MarkdownUtils.getFrontMatter(markdown);
+
+        // TODO
+        return null;
+    }
+
+    @Override
+    public String exportMarkdown(Integer id) {
+        Assert.notNull(id, "sheet id must not be null");
+        Sheet sheet = getById(id);
+        return exportMarkdown(sheet);
+    }
+
+    @Override
+    public String exportMarkdown(Sheet sheet) {
+        Assert.notNull(sheet, "Sheet must not be null");
+
+        StrBuilder content = new StrBuilder("---\n");
+
+        content.append("type: ").append("sheet").append("\n");
+        content.append("title: ").append(sheet.getTitle()).append("\n");
+        content.append("permalink: ").append(sheet.getUrl()).append("\n");
+        content.append("thumbnail: ").append(sheet.getThumbnail()).append("\n");
+        content.append("status: ").append(sheet.getStatus()).append("\n");
+        content.append("date: ").append(sheet.getCreateTime()).append("\n");
+        content.append("updated: ").append(sheet.getEditTime()).append("\n");
+        content.append("comments: ").append(!sheet.getDisallowComment()).append("\n");
+
+        content.append("---\n\n");
+        content.append(sheet.getOriginalContent());
+        return content.toString();
+    }
+
+    @Override
+    public List<InternalSheetDTO> listInternal() {
+
+        List<InternalSheetDTO> internalSheetDTOS = new ArrayList<>();
+
+        // links sheet
+        InternalSheetDTO linkSheet = new InternalSheetDTO();
+        linkSheet.setId(1);
+        linkSheet.setTitle("友情链接");
+        linkSheet.setUrl("/links");
+        linkSheet.setStatus(themeService.templateExists("links.ftl"));
+
+        // photos sheet
+        InternalSheetDTO photoSheet = new InternalSheetDTO();
+        photoSheet.setId(2);
+        photoSheet.setTitle("图库页面");
+        photoSheet.setUrl("/photos");
+        photoSheet.setStatus(themeService.templateExists("photos.ftl"));
+
+        // journals sheet
+        InternalSheetDTO journalSheet = new InternalSheetDTO();
+        journalSheet.setId(3);
+        journalSheet.setTitle("日志页面");
+        journalSheet.setUrl("/journals");
+        journalSheet.setStatus(themeService.templateExists("journals.ftl"));
+
+        internalSheetDTOS.add(linkSheet);
+        internalSheetDTOS.add(photoSheet);
+        internalSheetDTOS.add(journalSheet);
+
+        return internalSheetDTOS;
     }
 
     @Override

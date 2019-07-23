@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
+import run.halo.app.model.dto.InternalSheetDTO;
 import run.halo.app.model.dto.post.BasePostDetailDTO;
 import run.halo.app.model.entity.Sheet;
 import run.halo.app.model.enums.PostStatus;
@@ -13,6 +14,7 @@ import run.halo.app.model.vo.SheetListVO;
 import run.halo.app.service.SheetService;
 
 import javax.validation.Valid;
+import java.util.List;
 
 import static org.springframework.data.domain.Sort.Direction.DESC;
 
@@ -20,6 +22,7 @@ import static org.springframework.data.domain.Sort.Direction.DESC;
  * Sheet controller.
  *
  * @author johnniang
+ * @author ryanwang
  * @date 19-4-24
  */
 @RestController
@@ -41,9 +44,15 @@ public class SheetController {
 
     @GetMapping
     @ApiOperation("Gets a page of sheet")
-    public Page<SheetListVO> pageBy(@PageableDefault(sort = "editTime", direction = DESC) Pageable pageable) {
+    public Page<SheetListVO> pageBy(@PageableDefault(sort = "createTime", direction = DESC) Pageable pageable) {
         Page<Sheet> sheetPage = sheetService.pageBy(pageable);
         return sheetService.convertToListVo(sheetPage);
+    }
+
+    @GetMapping("internal")
+    @ApiOperation("Lists internal sheets")
+    public List<InternalSheetDTO> internalSheets() {
+        return sheetService.listInternal();
     }
 
     @PostMapping
