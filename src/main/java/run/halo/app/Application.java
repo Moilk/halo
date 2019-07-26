@@ -28,6 +28,7 @@ public class Application extends SpringBootServletInitializer {
     public static void main(String[] args) {
         // Customize the spring config location
         System.setProperty("spring.config.additional-location", "file:${user.home}/.halo/,file:${user.home}/halo-dev/");
+        System.setProperty("tomcat.util.http.parser.HttpParser.requestTargetAllow","[]");
 
         // Run application
         SpringApplication.run(Application.class, args);
@@ -36,6 +37,7 @@ public class Application extends SpringBootServletInitializer {
     @Override
     protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
         System.setProperty("spring.config.additional-location", "file:${user.home}/.halo/,file:${user.home}/halo-dev/");
+        System.setProperty("tomcat.util.http.parser.HttpParser.requestTargetAllow","[]");
         return application.sources(Application.class);
     }
 }
