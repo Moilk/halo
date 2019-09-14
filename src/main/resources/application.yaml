@@ -1,9 +1,17 @@
 server:
   port: 8090
+  ssl:
+    key-store: classpath:cert/2556300_moilk.top.pfx
+    key-store-password: ot3AT900
+    key-store-type: PKCS12
+    enabled: true
   use-forward-headers: true
   compression:
     enabled: false
     mime-types: application/javascript,text/css,application/json,application/xml,text/html,text/xml,text/plain
+
+http-port: 8091
+
 spring:
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
@@ -21,11 +29,11 @@ spring:
     username: admin
     password: 123456
 
-    # MySQL 配置
-  #  driver-class-name: com.mysql.cj.jdbc.Driver
-  #  url: jdbc:mysql://127.0.0.1:3306/halodb?characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
-  #  username: root
-  #  password: 123456
+  # MySQL 配置
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+#    url: jdbc:mysql://120.78.151.3:3306/halodb?characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
+#    username: root
+#    password: 1q9o9o5t
 
   h2:
     console:
@@ -45,6 +53,7 @@ spring:
   mvc:
     favicon:
       enabled: false
+
 logging:
   level:
     run.halo.app: INFO
