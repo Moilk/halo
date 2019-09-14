@@ -9,20 +9,15 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.util.ResourceUtils;
 import run.halo.app.config.properties.HaloProperties;
-import run.halo.app.model.entity.User;
-import run.halo.app.model.params.UserParam;
 import run.halo.app.model.properties.PrimaryProperties;
-import run.halo.app.model.support.CreateCheck;
 import run.halo.app.service.OptionService;
 import run.halo.app.service.ThemeService;
 import run.halo.app.service.UserService;
 import run.halo.app.utils.FileUtils;
-import run.halo.app.utils.ValidationUtils;
 
 import java.net.URI;
 import java.nio.file.*;
 import java.util.Collections;
-import java.util.List;
 
 /**
  * The method executed after the application is started.
@@ -71,19 +66,21 @@ public class StartedListener implements ApplicationListener<ApplicationStartedEv
         // Whether the blog has initialized
         Boolean isInstalled = optionService.getByPropertyOrDefault(PrimaryProperties.IS_INSTALLED, Boolean.class, false);
 
-        if (haloProperties.isProductionEnv() && isInstalled) {
+        /*if (haloProperties.isProductionEnv() && isInstalled) {
             // Skip
             return;
-        }
+        }*/
 
         try {
             String themeClassPath = ResourceUtils.CLASSPATH_URL_PREFIX + ThemeService.THEME_FOLDER;
 
             URI themeUri = ResourceUtils.getURL(themeClassPath).toURI();
 
+            log.debug("Theme uri: [{}]", themeUri);
+
             Path source;
 
-            if (themeUri.getScheme().equalsIgnoreCase("jar")) {
+            if ("jar".equalsIgnoreCase(themeUri.getScheme())) {
                 // Create new file system for jar
                 FileSystem fileSystem = FileSystems.newFileSystem(themeUri, Collections.emptyMap());
                 source = fileSystem.getPath("/BOOT-INF/classes/" + ThemeService.THEME_FOLDER);
@@ -94,7 +91,8 @@ public class StartedListener implements ApplicationListener<ApplicationStartedEv
             // Create theme folder
             Path themePath = themeService.getBasePath();
 
-            if (!haloProperties.isProductionEnv() || Files.notExists(themePath)) {
+            // Fix the problem that the project cannot start after moving to a new server
+            if (!haloProperties.isProductionEnv() || Files.notExists(themePath) || !isInstalled) {
                 FileUtils.copyFolder(source, themePath);
                 log.info("Copied theme folder from [{}] to [{}]", source, themePath);
             } else {

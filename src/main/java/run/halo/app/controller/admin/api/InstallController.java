@@ -1,5 +1,7 @@
 package run.halo.app.controller.admin.api;
 
+import cn.hutool.core.text.StrBuilder;
+import cn.hutool.crypto.SecureUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.ApplicationEventPublisher;
@@ -144,9 +146,9 @@ public class InstallController {
 
         PostCommentParam commentParam = new PostCommentParam();
         commentParam.setAuthor("Halo Bot");
-        commentParam.setAuthorUrl("https://github.com/halo-dev/halo");
+        commentParam.setAuthorUrl("https://halo.run");
         commentParam.setContent("欢迎使用 Halo，这是你的第一条评论。");
-        commentParam.setEmail("i@ryanc.cc");
+        commentParam.setEmail("halo@halo.run");
         commentParam.setPostId(post.getId());
         return postCommentService.create(commentParam.convertTo());
     }
@@ -198,7 +200,13 @@ public class InstallController {
             userService.setPassword(user, installParam.getPassword());
             // Update user
             return userService.update(user);
-        }).orElseGet(() -> userService.createBy(installParam));
+        }).orElseGet(() -> {
+            StrBuilder gravatar = new StrBuilder("//cn.gravatar.com/avatar/");
+            gravatar.append(SecureUtil.md5(installParam.getEmail()));
+            gravatar.append("?s=256&d=mm");
+            installParam.setAvatar(gravatar.toString());
+            return userService.createBy(installParam);
+        });
     }
 
     private void initSettings(InstallParam installParam) {

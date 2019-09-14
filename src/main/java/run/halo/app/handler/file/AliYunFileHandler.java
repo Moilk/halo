@@ -1,13 +1,14 @@
 package run.halo.app.handler.file;
 
-import cn.hutool.core.lang.Assert;
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClientBuilder;
-import com.aliyun.oss.model.*;
+import com.aliyun.oss.model.DeleteObjectsRequest;
+import com.aliyun.oss.model.PutObjectResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 import org.springframework.web.multipart.MultipartFile;
 import run.halo.app.exception.FileOperationException;
 import run.halo.app.model.enums.AttachmentType;
@@ -18,12 +19,13 @@ import run.halo.app.utils.FilenameUtils;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.util.Date;
 import java.util.Objects;
 
 /**
  * AliYun file handler.
+ *
  * @author MyFaith
+ * @author ryanwang
  * @date 2019-04-04 00:06:13
  */
 @Slf4j
@@ -41,11 +43,14 @@ public class AliYunFileHandler implements FileHandler {
         Assert.notNull(file, "Multipart file must not be null");
 
         // Get config
+        String ossDomain = optionService.getByPropertyOrDefault(AliYunProperties.OSS_DOMAIN, String.class, "");
         String ossEndPoint = optionService.getByPropertyOfNonNull(AliYunProperties.OSS_ENDPOINT).toString();
         String ossAccessKey = optionService.getByPropertyOfNonNull(AliYunProperties.OSS_ACCESS_KEY).toString();
         String ossAccessSecret = optionService.getByPropertyOfNonNull(AliYunProperties.OSS_ACCESS_SECRET).toString();
         String ossBucketName = optionService.getByPropertyOfNonNull(AliYunProperties.OSS_BUCKET_NAME).toString();
         String ossSource = StringUtils.join("https://", ossBucketName, "." + ossEndPoint);
+        String ossStyleRule = optionService.getByPropertyOrDefault(AliYunProperties.OSS_STYLE_RULE, String.class, "");
+        String ossThumbnailStyleRule = optionService.getByPropertyOrDefault(AliYunProperties.OSS_THUMBNAIL_STYLE_RULE, String.class, "");
 
         // Init OSS client
         OSS ossClient = new OSSClientBuilder().build(ossEndPoint, ossAccessKey, ossAccessSecret);
@@ -55,18 +60,18 @@ public class AliYunFileHandler implements FileHandler {
             String extension = FilenameUtils.getExtension(file.getOriginalFilename());
             String timestamp = String.valueOf(System.currentTimeMillis());
             String upFilePath = StringUtils.join(basename, "_", timestamp, ".", extension);
-            String filePath = StringUtils.join(StringUtils.appendIfMissing(ossSource, "/"), upFilePath);
+            String filePath = StringUtils.join(StringUtils.appendIfMissing(StringUtils.isNotBlank(ossDomain) ? ossDomain : ossSource, "/"), upFilePath);
 
             // Upload
             PutObjectResult putObjectResult = ossClient.putObject(ossBucketName, upFilePath, file.getInputStream());
             if (putObjectResult == null) {
-                throw new FileOperationException("Failed to upload file " + file.getOriginalFilename() + " to AliYun " + upFilePath);
+                throw new FileOperationException("上传附件 " + file.getOriginalFilename() + " 到阿里云失败 ");
             }
 
             // Response result
             UploadResult uploadResult = new UploadResult();
             uploadResult.setFilename(basename);
-            uploadResult.setFilePath(filePath);
+            uploadResult.setFilePath(StringUtils.isBlank(ossStyleRule) ? filePath : filePath + ossStyleRule);
             uploadResult.setKey(upFilePath);
             uploadResult.setMediaType(MediaType.valueOf(Objects.requireNonNull(file.getContentType())));
             uploadResult.setSuffix(extension);
@@ -77,11 +82,11 @@ public class AliYunFileHandler implements FileHandler {
                 BufferedImage image = ImageIO.read(file.getInputStream());
                 uploadResult.setWidth(image.getWidth());
                 uploadResult.setHeight(image.getHeight());
-                uploadResult.setThumbPath(filePath);
+                uploadResult.setThumbPath(StringUtils.isBlank(ossThumbnailStyleRule) ? filePath : filePath + ossThumbnailStyleRule);
             }
 
             return uploadResult;
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         } finally {
             ossClient.shutdown();
@@ -104,7 +109,6 @@ public class AliYunFileHandler implements FileHandler {
         String ossAccessKey = optionService.getByPropertyOfNonNull(AliYunProperties.OSS_ACCESS_KEY).toString();
         String ossAccessSecret = optionService.getByPropertyOfNonNull(AliYunProperties.OSS_ACCESS_SECRET).toString();
         String ossBucketName = optionService.getByPropertyOfNonNull(AliYunProperties.OSS_BUCKET_NAME).toString();
-        String ossSource = StringUtils.join("https://", ossBucketName, "." + ossEndPoint);
 
         // Init OSS client
         OSS ossClient = new OSSClientBuilder().build(ossEndPoint, ossAccessKey, ossAccessSecret);
@@ -112,7 +116,7 @@ public class AliYunFileHandler implements FileHandler {
         try {
             ossClient.deleteObject(new DeleteObjectsRequest(ossBucketName).withKey(key));
         } catch (Exception e) {
-            throw new FileOperationException("Failed to delete file " + key + " from AliYun", e);
+            throw new FileOperationException("附件 " + key + " 从阿里云删除失败", e);
         } finally {
             ossClient.shutdown();
         }

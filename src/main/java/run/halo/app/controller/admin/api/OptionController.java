@@ -4,10 +4,7 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 import run.halo.app.model.dto.OptionDTO;
-import run.halo.app.model.params.MailParam;
 import run.halo.app.model.params.OptionParam;
-import run.halo.app.model.support.BaseResponse;
-import run.halo.app.service.MailService;
 import run.halo.app.service.OptionService;
 
 import javax.validation.Valid;
@@ -52,7 +49,7 @@ public class OptionController {
 
     @PostMapping("map_view/saving")
     @ApiOperation("Saves options by option map")
-    public void saveOptionsWithMapView(@RequestBody Map<String, String> optionMap) {
+    public void saveOptionsWithMapView(@RequestBody Map<String, Object> optionMap) {
         optionService.save(optionMap);
     }
 

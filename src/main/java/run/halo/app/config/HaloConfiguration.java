@@ -1,6 +1,7 @@
 package run.halo.app.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -8,7 +9,6 @@ import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.web.client.RestTemplate;
@@ -37,6 +37,7 @@ import java.security.NoSuchAlgorithmException;
  */
 @Configuration
 @EnableConfigurationProperties(HaloProperties.class)
+@Slf4j
 public class HaloConfiguration {
 
     private final static int TIMEOUT = 5000;
@@ -81,7 +82,6 @@ public class HaloConfiguration {
      *
      * @return Log filter registration bean
      */
-    @Bean
     public FilterRegistrationBean<LogFilter> logFilter() {
         FilterRegistrationBean<LogFilter> logFilter = new FilterRegistrationBean<>();
 
@@ -114,7 +114,8 @@ public class HaloConfiguration {
         ApiAuthenticationFilter apiFilter = new ApiAuthenticationFilter(haloProperties, optionService);
         apiFilter.addExcludeUrlPatterns(
                 "/api/content/*/comments",
-                "/api/content/**/comments/*"
+                "/api/content/**/comments/**",
+                "/api/content/options/comment"
         );
 
         DefaultAuthenticationFailureHandler failureHandler = new DefaultAuthenticationFailureHandler();
@@ -149,7 +150,10 @@ public class HaloConfiguration {
                 "/api/admin/login",
                 "/api/admin/refresh/*",
                 "/api/admin/installations",
-                "/api/admin/recoveries/migrations/*"
+                "/api/admin/recoveries/migrations/*",
+                "/api/admin/is_installed",
+                "/api/admin/password/code",
+                "/api/admin/password/reset"
         );
         adminAuthenticationFilter.setFailureHandler(
                 failureHandler);

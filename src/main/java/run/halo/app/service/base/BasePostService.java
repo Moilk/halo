@@ -4,7 +4,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
-import org.springframework.transaction.annotation.Transactional;
 import run.halo.app.model.dto.post.BasePostDetailDTO;
 import run.halo.app.model.dto.post.BasePostMinimalDTO;
 import run.halo.app.model.dto.post.BasePostSimpleDTO;
@@ -122,6 +121,7 @@ public interface BasePostService<POST extends BasePost> extends CrudService<POST
 
     /**
      * Lists latest posts.
+     *
      * @param top top number must not be less than 0
      * @return latest posts
      */
@@ -153,7 +153,6 @@ public interface BasePostService<POST extends BasePost> extends CrudService<POST
      * @param visits visits must not be less than 1
      * @param postId post id must not be null
      */
-    @Transactional
     void increaseVisit(long visits, @NonNull Integer postId);
 
     /**
@@ -162,7 +161,6 @@ public interface BasePostService<POST extends BasePost> extends CrudService<POST
      * @param likes  likes must not be less than 1
      * @param postId post id must not be null
      */
-    @Transactional
     void increaseLike(long likes, @NonNull Integer postId);
 
     /**
@@ -170,7 +168,6 @@ public interface BasePostService<POST extends BasePost> extends CrudService<POST
      *
      * @param postId post id must not be null
      */
-    @Transactional
     void increaseVisit(@NonNull Integer postId);
 
     /**
@@ -178,9 +175,7 @@ public interface BasePostService<POST extends BasePost> extends CrudService<POST
      *
      * @param postId post id must not be null
      */
-    @Transactional
     void increaseLike(@NonNull Integer postId);
-
 
     /**
      * Creates or updates by post.

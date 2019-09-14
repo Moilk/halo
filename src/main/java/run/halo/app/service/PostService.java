@@ -3,7 +3,6 @@ package run.halo.app.service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.lang.NonNull;
-import org.springframework.transaction.annotation.Transactional;
 import run.halo.app.model.entity.Post;
 import run.halo.app.model.enums.PostStatus;
 import run.halo.app.model.params.PostQuery;
@@ -17,10 +16,11 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Post service.
+ * Post service interface.
  *
  * @author johnniang
  * @author ryanwang
+ * @date 2019-03-14
  */
 public interface PostService extends BasePostService<Post> {
 
@@ -50,11 +50,11 @@ public interface PostService extends BasePostService<Post> {
      * @param post        post must not be null
      * @param tagIds      tag id set
      * @param categoryIds category id set
+     * @param autoSave    autoSave
      * @return post created
      */
     @NonNull
-    @Transactional
-    PostDetailVO createBy(@NonNull Post post, Set<Integer> tagIds, Set<Integer> categoryIds);
+    PostDetailVO createBy(@NonNull Post post, Set<Integer> tagIds, Set<Integer> categoryIds, boolean autoSave);
 
     /**
      * Updates post by post, tag id set and category id set.
@@ -62,11 +62,11 @@ public interface PostService extends BasePostService<Post> {
      * @param postToUpdate post to update must not be null
      * @param tagIds       tag id set
      * @param categoryIds  category id set
+     * @param autoSave     autoSave
      * @return updated post
      */
     @NonNull
-    @Transactional
-    PostDetailVO updateBy(@NonNull Post postToUpdate, Set<Integer> tagIds, Set<Integer> categoryIds);
+    PostDetailVO updateBy(@NonNull Post postToUpdate, Set<Integer> tagIds, Set<Integer> categoryIds, boolean autoSave);
 
     /**
      * Gets post by post status and url.
@@ -94,6 +94,34 @@ public interface PostService extends BasePostService<Post> {
      */
     @NonNull
     List<ArchiveMonthVO> listMonthArchives();
+
+    /**
+     * Import post from markdown document.
+     *
+     * @param markdown markdown document.
+     * @param filename filename
+     * @return imported post
+     */
+    @NonNull
+    PostDetailVO importMarkdown(@NonNull String markdown, String filename);
+
+    /**
+     * Export post to markdown file by post id.
+     *
+     * @param id post id
+     * @return markdown file content
+     */
+    @NonNull
+    String exportMarkdown(@NonNull Integer id);
+
+    /**
+     * Export post to markdown file by post.
+     *
+     * @param post current post
+     * @return markdown file content
+     */
+    @NonNull
+    String exportMarkdown(@NonNull Post post);
 
     /**
      * Converts to detail vo.

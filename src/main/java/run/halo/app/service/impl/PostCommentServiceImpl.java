@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
+import run.halo.app.exception.BadRequestException;
 import run.halo.app.exception.NotFoundException;
 import run.halo.app.model.dto.post.BasePostMinimalDTO;
 import run.halo.app.model.entity.Post;
@@ -31,7 +32,8 @@ import java.util.stream.Collectors;
  * PostCommentService implementation class
  *
  * @author ryanwang
- * @date : 2019-03-14
+ * @author johnniang
+ * @date 2019-03-14
  */
 @Slf4j
 @Service
@@ -57,6 +59,14 @@ public class PostCommentServiceImpl extends BaseCommentServiceImpl<PostComment> 
 
         return new PageImpl<>(convertToWithPostVo(commentPage.getContent()), commentPage.getPageable(), commentPage.getTotalElements());
 
+    }
+
+    @Override
+    public PostCommentWithPostVO convertToWithPostVo(PostComment comment) {
+        Assert.notNull(comment, "PostComment must not be null");
+        PostCommentWithPostVO postCommentWithPostVO = new PostCommentWithPostVO().convertFrom(comment);
+        postCommentWithPostVO.setPost(new BasePostMinimalDTO().convertFrom(postRepository.getOne(comment.getPostId())));
+        return postCommentWithPostVO;
     }
 
     @Override
@@ -92,9 +102,12 @@ public class PostCommentServiceImpl extends BaseCommentServiceImpl<PostComment> 
     }
 
     @Override
-    public void targetMustExist(Integer postId) {
-        if (!postRepository.existsById(postId)) {
-            throw new NotFoundException("The post with id " + postId + " was not found");
+    public void validateTarget(Integer postId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new NotFoundException("查询不到该文章的信息").setErrorData(postId));
+
+        if (post.getDisallowComment()) {
+            throw new BadRequestException("该文章已经被禁止评论").setErrorData(postId);
         }
     }
 }

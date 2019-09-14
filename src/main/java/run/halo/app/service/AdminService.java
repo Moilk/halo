@@ -4,14 +4,15 @@ import org.springframework.lang.NonNull;
 import run.halo.app.model.dto.EnvironmentDTO;
 import run.halo.app.model.dto.StatisticDTO;
 import run.halo.app.model.params.LoginParam;
+import run.halo.app.model.params.ResetPasswordParam;
 import run.halo.app.security.token.AuthToken;
 
 /**
- * Admin service.
+ * Admin service interface.
  *
  * @author johnniang
  * @author ryanwang
- * @date 19-4-29
+ * @date 2019-04-29
  */
 public interface AdminService {
 
@@ -25,6 +26,8 @@ public interface AdminService {
     String ACCESS_TOKEN_CACHE_PREFIX = "halo.admin.access_token.";
 
     String REFRESH_TOKEN_CACHE_PREFIX = "halo.admin.refresh_token.";
+
+    String LOGS_PATH = "logs/spring.log";
 
     /**
      * Authenticates.
@@ -41,6 +44,20 @@ public interface AdminService {
     void clearToken();
 
     /**
+     * Send reset password code to administrator's email.
+     *
+     * @param param param must not be null
+     */
+    void sendResetPasswordCode(@NonNull ResetPasswordParam param);
+
+    /**
+     * Reset password by code.
+     *
+     * @param param param must not be null
+     */
+    void resetPasswordByCode(@NonNull ResetPasswordParam param);
+
+    /**
      * Get system counts.
      *
      * @return count dto
@@ -50,6 +67,7 @@ public interface AdminService {
 
     /**
      * Get system environments
+     *
      * @return environments
      */
     @NonNull
@@ -63,4 +81,16 @@ public interface AdminService {
      */
     @NonNull
     AuthToken refreshToken(@NonNull String refreshToken);
+
+    /**
+     * Updates halo admin assets.
+     */
+    void updateAdminAssets();
+
+    /**
+     * Get spring logs.
+     *
+     * @return recently logs.
+     */
+    String getSpringLogs();
 }

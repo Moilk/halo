@@ -14,6 +14,7 @@ import run.halo.app.event.user.UserUpdatedEvent;
 import run.halo.app.exception.BadRequestException;
 import run.halo.app.exception.ForbiddenException;
 import run.halo.app.exception.NotFoundException;
+import run.halo.app.exception.ServiceException;
 import run.halo.app.model.entity.User;
 import run.halo.app.model.enums.LogType;
 import run.halo.app.model.params.UserParam;
@@ -29,10 +30,11 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 /**
- * UserService implementation class
+ * UserService implementation class.
  *
  * @author ryanwang
- * @date : 2019-03-14
+ * @author johnniang
+ * @date 2019-03-14
  */
 @Service
 public class UserServiceImpl extends AbstractCrudService<User, Integer> implements UserService {
@@ -76,24 +78,11 @@ public class UserServiceImpl extends AbstractCrudService<User, Integer> implemen
         return getByUsername(username).orElseThrow(() -> new NotFoundException("The username dose not exist").setErrorData(username));
     }
 
-    /**
-     * Gets user by email.
-     *
-     * @param email email must not be blank
-     * @return an optional user
-     */
     @Override
     public Optional<User> getByEmail(String email) {
         return userRepository.findByEmail(email);
     }
 
-    /**
-     * Gets non null user by email.
-     *
-     * @param email email
-     * @return user info
-     * @throws NotFoundException throws when the username does not exist
-     */
     @Override
     public User getByEmailOfNonNull(String email) {
         return getByEmail(email).orElseThrow(() -> new NotFoundException("The email dose not exist").setErrorData(email));
@@ -106,7 +95,7 @@ public class UserServiceImpl extends AbstractCrudService<User, Integer> implemen
         Assert.notNull(userId, "User id must not be blank");
 
         if (oldPassword.equals(newPassword)) {
-            throw new BadRequestException("There is nothing changed because new password is equal to old password");
+            throw new BadRequestException("新密码和旧密码不能相同");
         }
 
         // Get the user
@@ -114,7 +103,7 @@ public class UserServiceImpl extends AbstractCrudService<User, Integer> implemen
 
         // Check the user old password
         if (!BCrypt.checkpw(oldPassword, user.getPassword())) {
-            throw new BadRequestException("Old password is mismatch").setErrorData(oldPassword);
+            throw new BadRequestException("旧密码错误").setErrorData(oldPassword);
         }
 
         // Set new password
@@ -124,7 +113,7 @@ public class UserServiceImpl extends AbstractCrudService<User, Integer> implemen
         User updatedUser = update(user);
 
         // Log it
-        eventPublisher.publishEvent(new LogEvent(this, updatedUser.getId().toString(), LogType.PASSWORD_UPDATED, oldPassword));
+        eventPublisher.publishEvent(new LogEvent(this, updatedUser.getId().toString(), LogType.PASSWORD_UPDATED, HaloUtils.desensitize(oldPassword, 2, 1)));
 
         return updatedUser;
     }
@@ -148,7 +137,7 @@ public class UserServiceImpl extends AbstractCrudService<User, Integer> implemen
         if (user.getExpireTime() != null && user.getExpireTime().after(now)) {
             long seconds = TimeUnit.MILLISECONDS.toSeconds(user.getExpireTime().getTime() - now.getTime());
             // If expired
-            throw new ForbiddenException("You have been temporarily disabled，please try again " + HaloUtils.timeFormat(seconds) + " later").setErrorData(seconds);
+            throw new ForbiddenException("账号已被停用，请 " + HaloUtils.timeFormat(seconds) + " 后重试").setErrorData(seconds);
         }
     }
 
@@ -164,7 +153,7 @@ public class UserServiceImpl extends AbstractCrudService<User, Integer> implemen
     public User create(User user) {
         // Check user
         if (count() != 0) {
-            throw new BadRequestException("This blog already exists a blogger");
+            throw new BadRequestException("当前博客已有用户");
         }
 
         User createdUser = super.create(user);
@@ -193,4 +182,9 @@ public class UserServiceImpl extends AbstractCrudService<User, Integer> implemen
         user.setPassword(BCrypt.hashpw(plainPassword, BCrypt.gensalt()));
     }
 
+    @Override
+    public boolean verifyUser(String username, String password) {
+        User user = getCurrentUser().orElseThrow(() -> new ServiceException("未查询到博主信息"));
+        return user.getUsername().equals(username) && user.getEmail().equals(password);
+    }
 }

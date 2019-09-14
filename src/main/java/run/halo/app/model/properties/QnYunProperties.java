@@ -4,21 +4,24 @@ package run.halo.app.model.properties;
  * Qi niu yun properties.
  *
  * @author johnniang
+ * @author ryanwang
  * @date 3/26/19
  */
 public enum QnYunProperties implements PropertyEnum {
 
-    ZONE("oss_qiniu_zone", String.class, "auto"),
+    OSS_ZONE("oss_qiniu_zone", String.class, "auto"),
 
-    ACCESS_KEY("oss_qiniu_access_key", String.class, ""),
+    OSS_ACCESS_KEY("oss_qiniu_access_key", String.class, ""),
 
-    SECRET_KEY("oss_qiniu_secret_key", String.class, ""),
+    OSS_SECRET_KEY("oss_qiniu_secret_key", String.class, ""),
 
-    DOMAIN("oss_qiniu_domain", String.class, ""),
+    OSS_DOMAIN("oss_qiniu_domain", String.class, ""),
 
-    BUCKET("oss_qiniu_bucket", String.class, ""),
+    OSS_BUCKET("oss_qiniu_bucket", String.class, ""),
 
-    SMALL_URL("oss_qiniu_small_url", String.class, "");
+    OSS_STYLE_RULE("oss_qiniu_style_rule", String.class, ""),
+
+    OSS_THUMBNAIL_STYLE_RULE("oss_qiniu_thumbnail_style_rule", String.class, "");
 
     private final String value;
 

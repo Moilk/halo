@@ -27,7 +27,7 @@ public class InMemoryCacheStore extends StringCacheStore {
     /**
      * Cache container.
      */
-    private final static ConcurrentHashMap<String, CacheWrapper<String>> cacheContainer = new ConcurrentHashMap<>();
+    private final static ConcurrentHashMap<String, CacheWrapper<String>> CACHE_CONTAINER = new ConcurrentHashMap<>();
 
     private final Timer timer;
 
@@ -46,7 +46,7 @@ public class InMemoryCacheStore extends StringCacheStore {
     Optional<CacheWrapper<String>> getInternal(String key) {
         Assert.hasText(key, "Cache key must not be blank");
 
-        return Optional.ofNullable(cacheContainer.get(key));
+        return Optional.ofNullable(CACHE_CONTAINER.get(key));
     }
 
     @Override
@@ -55,7 +55,7 @@ public class InMemoryCacheStore extends StringCacheStore {
         Assert.notNull(cacheWrapper, "Cache wrapper must not be null");
 
         // Put the cache wrapper
-        CacheWrapper<String> putCacheWrapper = cacheContainer.put(key, cacheWrapper);
+        CacheWrapper<String> putCacheWrapper = CACHE_CONTAINER.put(key, cacheWrapper);
 
         log.debug("Put [{}] cache result: [{}], original cache wrapper: [{}]", key, putCacheWrapper, cacheWrapper);
     }
@@ -90,8 +90,14 @@ public class InMemoryCacheStore extends StringCacheStore {
     public void delete(String key) {
         Assert.hasText(key, "Cache key must not be blank");
 
-        cacheContainer.remove(key);
+        CACHE_CONTAINER.remove(key);
         log.debug("Removed key: [{}]", key);
+    }
+
+    @PreDestroy
+    public void preDestroy() {
+        log.debug("Cancelling all timer tasks");
+        timer.cancel();
     }
 
     /**
@@ -104,17 +110,11 @@ public class InMemoryCacheStore extends StringCacheStore {
 
         @Override
         public void run() {
-            cacheContainer.keySet().forEach(key -> {
+            CACHE_CONTAINER.keySet().forEach(key -> {
                 if (!InMemoryCacheStore.this.get(key).isPresent()) {
                     log.debug("Deleted the cache: [{}] for expiration", key);
                 }
             });
         }
-    }
-
-    @PreDestroy
-    public void preDestroy() {
-        log.debug("Cancelling all timer tasks");
-        timer.cancel();
     }
 }

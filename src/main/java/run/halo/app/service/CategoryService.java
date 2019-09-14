@@ -15,7 +15,10 @@ import java.util.List;
  * Category service.
  *
  * @author johnniang
+ * @author ryanwang
+ * @date : 2019-03-14
  */
+@Transactional(readOnly = true)
 public interface CategoryService extends CrudService<Category, Integer> {
 
     /**
@@ -37,6 +40,24 @@ public interface CategoryService extends CrudService<Category, Integer> {
     Category getBySlugName(@NonNull String slugName);
 
     /**
+     * Get category by slug name
+     *
+     * @param slugName slug name
+     * @return Category
+     */
+    @NonNull
+    Category getBySlugNameOfNonNull(String slugName);
+
+    /**
+     * Get Category by name.
+     *
+     * @param name name
+     * @return Category
+     */
+    @Nullable
+    Category getByName(@NonNull String name);
+
+    /**
      * Removes category and post categories.
      *
      * @param categoryId category id must not be null
@@ -44,6 +65,12 @@ public interface CategoryService extends CrudService<Category, Integer> {
     @Transactional
     void removeCategoryAndPostCategoryBy(Integer categoryId);
 
+    /**
+     * List categories by parent id.
+     * @param id parent id.
+     * @return list of category.
+     */
+    List<Category> listByParentId(@NonNull Integer id);
 
     /**
      * Converts to category dto.
