@@ -29,11 +29,11 @@ spring:
     username: admin
     password: 123456
 
-  # MySQL 配置
-#    driver-class-name: com.mysql.cj.jdbc.Driver
-#    url: jdbc:mysql://120.78.151.3:3306/halodb?characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
-#    username: root
-#    password: 1q9o9o5t
+    # MySQL 配置
+  #  driver-class-name: com.mysql.cj.jdbc.Driver
+  #  url: jdbc:mysql://127.0.0.1:3306/halodb?characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+  #  username: root
+  #  password: 123456
 
   h2:
     console:

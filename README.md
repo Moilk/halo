@@ -28,13 +28,13 @@
 ### 下载最新的 Halo 安装包
 
 ```bash
-curl -L https://github.com/halo-dev/halo/releases/download/v1.1.0/halo-1.1.0.jar --output halo-latest.jar
+curl -L https://github.com/halo-dev/halo/releases/download/v1.1.1/halo-1.1.1.jar --output halo-latest.jar
 ```
 
 或者
 
 ```bash
-wget https://github.com/halo-dev/halo/releases/download/v1.1.0/halo-1.1.0.jar -O halo-latest.jar
+wget https://github.com/halo-dev/halo/releases/download/v1.1.1/halo-1.1.1.jar -O halo-latest.jar
 ```
 
 ### 启动 Halo
@@ -61,6 +61,9 @@ java -jar halo-latest.jar
 [![license](https://img.shields.io/github/license/halo-dev/halo.svg?style=flat-square)](https://github.com/halo-dev/halo/blob/master/LICENSE)
 
 > Halo 使用 GPL-v3.0 协议开源，请尽量遵守开源协议，即便是在中国。
+
+## 贡献
+参考 [CONTRIBUTING](./CONTRIBUTING.md)。
 
 ## 捐赠
 
