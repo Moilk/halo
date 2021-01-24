@@ -23,6 +23,7 @@ import com.vladsch.flexmark.util.data.DataHolder;
 import com.vladsch.flexmark.util.data.MutableDataSet;
 import org.apache.commons.lang3.StringUtils;
 import run.halo.app.model.support.HaloConst;
+import run.halo.app.utils.flexmark.ext.math.MathExtension;
 
 import java.util.Arrays;
 import java.util.List;
@@ -39,6 +40,7 @@ import java.util.regex.Pattern;
 public class MarkdownUtils {
 
     private static final DataHolder OPTIONS = new MutableDataSet().set(Parser.EXTENSIONS, Arrays.asList(AttributesExtension.create(),
+            MathExtension.create(),
             AutolinkExtension.create(),
             EmojiExtension.create(),
             EscapedCharacterExtension.create(),
